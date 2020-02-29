@@ -9,6 +9,19 @@ This project create 3 services using docker and docker-compose.
 
 ![DAMCORE](https://user-images.githubusercontent.com/61190134/75614085-4f4c0d80-5b35-11ea-9550-9f1d31de366b.png)
 
+## Requirements
+
+- docker
+- docker-compose
+
+## How to
+
+
+```sh
+$ cd docker
+$ docker-compose up --build  [optional=(-d)]   #Start
+$ docker-compose down                          #Stop
+```
 
 ## Legend
 - [A] Indicates that requires Authorization header (token)
