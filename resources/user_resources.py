@@ -2,14 +2,16 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import re
 
 import falcon
 from falcon.media.validators import jsonschema
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
+import phonenumbers
 
 import messages
-from db.models import User, GenereEnum
+from db.models import User
 from hooks import requires_auth
 from resources.base_resources import DAMCoreResource
 from resources.schemas import SchemaRegisterUser
@@ -39,16 +41,31 @@ class ResourceRegisterUser(DAMCoreResource):
 
         aux_user = User()
 
-
-        aux_user.password = req.media["password"]
-        aux_user.email = req.media["email"]
-
-        self.db_session.add(aux_user)
-
         try:
-            self.db_session.commit()
-        except IntegrityError:
-            raise falcon.HTTPBadRequest(description=messages.user_exists)
+            aux_user.password = req.media["password"]
+            aux_user.username = req.media["username"]
+
+            email_validator = '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$'
+
+            try:
+                phone = phonenumbers.parse(aux_user.username, None)
+            except:
+                raise falcon.HTTPBadRequest(description=messages.invalid_phone)
+
+            if phonenumbers.is_valid_number(phone):
+                aux_user.phone = str(phone.country_code) + str(phone.national_number)
+                aux_user.username = str(phone.country_code) + str(phone.national_number)
+            elif re.search(email_validator, aux_user.username):
+                aux_user.email = aux_user.username
+            else:
+                raise falcon.HTTPBadRequest(description=messages.invalid_username)
+
+            self.db_session.add(aux_user)
+
+            try:
+                self.db_session.commit()
+            except IntegrityError:
+                raise falcon.HTTPBadRequest(description=messages.user_exists)
 
         except KeyError:
             raise falcon.HTTPBadRequest(description=messages.parameters_invalid)

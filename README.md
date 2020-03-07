@@ -35,5 +35,10 @@ $ docker-compose down                          #Stop
 
 ### Users Resources
 - POST /users/register
+    - Required fields (body):
+        - *String*: **username**: it must be a valid phone or a valid email.
+        - *String*: **password**: it must be encrypted using sha256.
+    
+
 - [A] GET /users/show/{username:str}
 

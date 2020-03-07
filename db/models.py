@@ -62,9 +62,9 @@ class User(SQLAlchemyBase, JSONModel):
 
     id = Column(Integer, primary_key=True)
     created_at = Column(DateTime, default=datetime.datetime.now, nullable=False)
-    username = Column(Unicode(50))
+    username = Column(Unicode(50), unique=True, nullable=False)
     password = Column(UnicodeText, nullable=False)
-    email = Column(Unicode(255), nullable=False, unique=True)
+    email = Column(Unicode(255), )
     tokens = relationship("UserToken", back_populates="user", cascade="all, delete-orphan")
     name = Column(Unicode(50))
     surname = Column(Unicode(50))
