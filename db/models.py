@@ -43,6 +43,11 @@ def _generate_media_url(class_instance, class_attibute_name, default_image=False
             return class_attribute
 
 
+class RolEnum(enum.Enum):
+    owner = "O"
+    player = "P"
+
+
 class GenereEnum(enum.Enum):
     male = "M"
     female = "F"
@@ -66,10 +71,11 @@ class User(SQLAlchemyBase, JSONModel):
     password = Column(UnicodeText, nullable=False)
     email = Column(Unicode(255), nullable=False)
     tokens = relationship("UserToken", back_populates="user", cascade="all, delete-orphan")
-    name = Column(Unicode(50), nullable=False)
-    surname = Column(Unicode(50), nullable=False)
+    name = Column(Unicode(50))
+    surname = Column(Unicode(50))
     birthdate = Column(Date)
     genere = Column(Enum(GenereEnum), nullable=False)
+    rol = Column(Enum(RolEnum), nullable=False)
     phone = Column(Unicode(50))
     photo = Column(Unicode(255))
 
@@ -110,6 +116,7 @@ class User(SQLAlchemyBase, JSONModel):
             "birthdate": self.birthdate.strftime(
                 settings.DATE_DEFAULT_FORMAT) if self.birthdate is not None else self.birthdate,
             "genere": self.genere.value,
+            "rol": self.rol.value,
             "phone": self.phone,
             "photo": self.photo,
         }

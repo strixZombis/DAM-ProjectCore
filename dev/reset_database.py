@@ -9,7 +9,7 @@ from sqlalchemy.sql import text
 
 import db
 import settings
-from db.models import SQLAlchemyBase, User, GenereEnum, UserToken
+from db.models import SQLAlchemyBase, User, GenereEnum, UserToken,RolEnum
 from settings import DEFAULT_LANGUAGE
 
 # LOGGING
@@ -48,6 +48,7 @@ if __name__ == "__main__":
         email="admin@damcore.com",
         name="Administrator",
         surname="DamCore",
+        rol=RolEnum.player,
         genere=GenereEnum.male,
     )
     user_admin.set_password("DAMCoure")
@@ -59,6 +60,7 @@ if __name__ == "__main__":
         email="usuari1@gmail.com",
         name="usuari",
         surname="1",
+        rol=RolEnum.player,
         birthdate=datetime.datetime(1989, 1, 1),
         genere=GenereEnum.male
     )
@@ -72,6 +74,7 @@ if __name__ == "__main__":
         email="user2@gmail.com",
         name="user",
         surname="2",
+        rol=RolEnum.player,
         birthdate=datetime.datetime(2017, 1, 1),
         genere=GenereEnum.male,
     )
