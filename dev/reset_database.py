@@ -9,7 +9,7 @@ from sqlalchemy.sql import text
 
 import db
 import settings
-from db.models import SQLAlchemyBase, User, GenereEnum, UserToken
+from db.models import SQLAlchemyBase, User, GenereEnum, UserToken, Favour
 from settings import DEFAULT_LANGUAGE
 
 # LOGGING
@@ -39,6 +39,14 @@ if __name__ == "__main__":
 
 
 
+    favour1 = Favour(
+        id=1,
+        user = "usuari1",
+        category = "Informatica",
+        name = "Favor1",
+        desc = "heyyyyyyyyyyyyyy",
+        amount = 10,
+    )
     # -------------------- CREATE USERS --------------------
     mylogger.info("Creating default users...")
     # noinspection PyArgumentList
@@ -60,7 +68,11 @@ if __name__ == "__main__":
         name="usuari",
         surname="1",
         birthdate=datetime.datetime(1989, 1, 1),
-        genere=GenereEnum.male
+        genere=GenereEnum.male,
+        stars = 1.3,
+        favoursDone=23,
+        location= "08700 Catalunya, Igualada"
+
     )
     user_1.set_password("a1s2d3f4")
     user_1.tokens.append(UserToken(token="656e50e154865a5dc469b80437ed2f963b8f58c8857b66c9bf"))
@@ -81,5 +93,6 @@ if __name__ == "__main__":
     db_session.add(user_admin)
     db_session.add(user_1)
     db_session.add(user_2)
+    db_session.add(favour1)
     db_session.commit()
     db_session.close()

@@ -2,16 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import re
 
 import falcon
 from falcon.media.validators import jsonschema
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
-import phonenumbers
 
 import messages
-from db.models import User
+from db.models import User, GenereEnum, Favour
 from hooks import requires_auth
 from resources.base_resources import DAMCoreResource
 from resources.schemas import SchemaRegisterUser
@@ -34,6 +32,7 @@ class ResourceGetUserProfile(DAMCoreResource):
                 raise falcon.HTTPBadRequest(description=messages.user_not_found)
 
 
+
 class ResourceRegisterUser(DAMCoreResource):
     @jsonschema.validate(SchemaRegisterUser)
     def on_post(self, req, resp, *args, **kwargs):
@@ -42,23 +41,11 @@ class ResourceRegisterUser(DAMCoreResource):
         aux_user = User()
 
         try:
-            aux_user.password = req.media["password"]
+
+
             aux_user.username = req.media["username"]
-
-            email_validator = '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$'
-
-            try:
-                phone = phonenumbers.parse(aux_user.username, None)
-            except:
-                raise falcon.HTTPBadRequest(description=messages.invalid_phone)
-
-            if phonenumbers.is_valid_number(phone):
-                aux_user.phone = str(phone.country_code) + str(phone.national_number)
-                aux_user.username = str(phone.country_code) + str(phone.national_number)
-            elif re.search(email_validator, aux_user.username):
-                aux_user.email = aux_user.username
-            else:
-                raise falcon.HTTPBadRequest(description=messages.invalid_username)
+            aux_user.password = req.media["password"]
+            aux_user.email = req.media["email"]
 
             self.db_session.add(aux_user)
 
@@ -71,3 +58,20 @@ class ResourceRegisterUser(DAMCoreResource):
             raise falcon.HTTPBadRequest(description=messages.parameters_invalid)
 
         resp.status = falcon.HTTP_200
+
+class ResourceGetFavours(DAMCoreResource):
+    def on_get(self, req, resp, *args, **kwargs):
+        super(ResourceGetFavours, self).on_get(req, resp, *args, **kwargs)
+
+        try:
+
+            aux_user = self.db_session.query(Favour)
+
+            resp.media = aux_user.getFavour
+            resp.status = falcon.HTTP_200
+        except NoResultFound:
+            raise falcon.HTTPBadRequest(description=messages.user_not_found)
+
+
+
+

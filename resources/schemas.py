@@ -14,6 +14,7 @@ SchemaRegisterUser = {
     "properties": {
         "username": {"type": "string"},
         "password": {"type": "string"},
+        "email": {"type": "string"},
     },
-    "required": ["password", "username"]
+    "required": ["username", "password", "email"]
 }
