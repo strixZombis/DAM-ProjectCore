@@ -39,14 +39,6 @@ if __name__ == "__main__":
 
 
 
-    favour1 = Favour(
-        id=1,
-        user = "usuari1",
-        category = "Informatica",
-        name = "Favor1",
-        desc = "heyyyyyyyyyyyyyy",
-        amount = 10,
-    )
     # -------------------- CREATE USERS --------------------
     mylogger.info("Creating default users...")
     # noinspection PyArgumentList
@@ -86,6 +78,9 @@ if __name__ == "__main__":
         surname="2",
         birthdate=datetime.datetime(2017, 1, 1),
         genere=GenereEnum.male,
+        stars=4,
+        favoursDone=2,
+        location="08700 Catalunya, Igualada"
     )
     user_2.set_password("r45tgt")
     user_2.tokens.append(UserToken(token="0a821f8ce58965eadc5ef884cf6f7ad99e0e7f58f429f584b2"))
@@ -93,6 +88,39 @@ if __name__ == "__main__":
     db_session.add(user_admin)
     db_session.add(user_1)
     db_session.add(user_2)
-    db_session.add(favour1)
+
+
+
+    # ------------------- CREATE FAVOURS ----------------------
+
+    favour_informatica1 = Favour(
+        owner_id= 2,
+        category="Informatica",
+        name="Favor1",
+        desc="heyyyyyyyyyyyyyy",
+        amount=10,
+    )
+
+    favour_informatica2 = Favour(
+        owner_id=3,
+        category="Informatica",
+        name="Favor2",
+        desc="heyyyyyyyyyyyyyy",
+        amount=15,
+    )
+
+    favour_electronica1 = Favour(
+        owner_id=3,
+        category="Electronica",
+        name="Favor3",
+        desc="heyyyyyyyyyyyyyy",
+        amount=35,
+    )
+
+    db_session.add(favour_informatica1)
+    db_session.add(favour_informatica2)
+    db_session.add(favour_electronica1)
+
+    # ------------------- CLOSE AND COMMIT CHANGES ----------------------
     db_session.commit()
     db_session.close()

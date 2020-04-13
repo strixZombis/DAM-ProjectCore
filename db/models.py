@@ -47,6 +47,30 @@ class GenereEnum(enum.Enum):
     male = "M"
     female = "F"
 
+class Favour(SQLAlchemyBase, JSONModel):
+    __tablename__ = "favours"
+
+    id = Column(Integer, primary_key=True)
+    owner_id = Column(Integer, ForeignKey("users.id",  onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    owner = relationship("User", back_populates="favours_owner")
+    category = Column(Unicode(20), nullable=False)
+    name = Column(Unicode(50), nullable=False)
+    desc = Column(Unicode(600), nullable=False)
+    amount = Column(Float, nullable=True)
+
+
+    @hybrid_property
+    def json_model(self):
+        return {
+            "id": self.id,
+             "owner": self.owner.username,
+            "category": self.category,
+            "name": self.name,
+            "desc": self.desc,
+            "amount": self.amount,
+
+        }
+
 
 class UserToken(SQLAlchemyBase):
     __tablename__ = "users_tokens"
@@ -76,6 +100,7 @@ class User(SQLAlchemyBase, JSONModel):
     favoursDone = Column(Integer, default=0)
     timesHelped = Column(Integer, default=0)
     location = Column(Unicode(255))
+    favours_owner = relationship("Favour", back_populates="owner",  cascade="all, delete-orphan")
 
     @hybrid_property
     def public_profile(self):
@@ -124,58 +149,6 @@ class User(SQLAlchemyBase, JSONModel):
             "favoursDone": self.favoursDone,
             "timesHelped": self.timesHelped,
             "location": self.location,
-        }
-
-
-
-class Favour(SQLAlchemyBase, JSONModel):
-    __tablename__ = "favours"
-
-    id = Column(Integer, primary_key=True)
-    user = Column(Unicode(15), nullable=False)
-    category = Column(Unicode(20), nullable=False)
-    name = Column(Unicode(50), nullable=False)
-    desc = Column(Unicode(600), nullable=False)
-    amount = Column(Float, nullable=True)
-
-
-    @hybrid_property
-    def getFavour(self):
-        return {
-            "id": self.id,
-            "user": self.user,
-            "category": self.category,
-            "name": self.name,
-            "desc": self.desc,
-            "amount": self.amount,
-
-        }
-
-    @hybrid_method
-    def set_password(self, password_string):
-        self.password = pbkdf2_sha256.hash(password_string)
-
-    @hybrid_method
-    def check_password(self, password_string):
-        return pbkdf2_sha256.verify(password_string, self.password)
-
-    @hybrid_method
-    def create_token(self):
-        if len(self.tokens) < settings.MAX_USER_TOKENS:
-            token_string = binascii.hexlify(os.urandom(25)).decode("utf-8")
-            aux_token = UserToken(token=token_string, user=self)
-            return aux_token
-        else:
-            raise falcon.HTTPBadRequest(title=messages.quota_exceded, description=messages.maximum_tokens_exceded)
-
-    @hybrid_property
-    def json_model(self):
-        return {
-            "id": self.id,
-            "user": self.user,
-            "category": self.category,
-            "name": self.name,
-            "desc": self.desc,
-            "amount": self.amount,
+            "favours_owner": [favour.id for favour in self.favours_owner],
         }
 

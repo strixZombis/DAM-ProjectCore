@@ -59,18 +59,7 @@ class ResourceRegisterUser(DAMCoreResource):
 
         resp.status = falcon.HTTP_200
 
-class ResourceGetFavours(DAMCoreResource):
-    def on_get(self, req, resp, *args, **kwargs):
-        super(ResourceGetFavours, self).on_get(req, resp, *args, **kwargs)
 
-        try:
-
-            aux_user = self.db_session.query(Favour)
-
-            resp.media = aux_user.getFavour
-            resp.status = falcon.HTTP_200
-        except NoResultFound:
-            raise falcon.HTTPBadRequest(description=messages.user_not_found)
 
 
 
