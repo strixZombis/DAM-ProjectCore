@@ -71,7 +71,7 @@ class Event(SQLAlchemyBase, JSONModel):
     type = Column(Enum(EventTypeEnum))
     start_date = Column(DateTime, nullable=False)
     finish_date = Column(DateTime, nullable=False)
-    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False, onupdate="CASCADE",ondelete="CASCADE")
     owner = relationship("User", back_populates="events_owner")
     registered = relationship("User", secondary=EventParticipantsAssociation, back_populates="events_enrolled")
 
@@ -121,7 +121,7 @@ class User(SQLAlchemyBase, JSONModel):
     genere = Column(Enum(GenereEnum), nullable=False)
     phone = Column(Unicode(50))
     photo = Column(Unicode(255))
-    events_owner = relationship("Event", back_populates="owner")
+    events_owner = relationship("Event", back_populates="owner",cascade="all, delete-orphan")
     events_enrolled = relationship("Event", back_populates="registered")
 
     @hybrid_property
