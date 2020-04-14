@@ -12,7 +12,7 @@ from urllib.parse import urljoin
 import falcon
 from passlib.hash import pbkdf2_sha256
 from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Integer, Unicode, \
-    UnicodeText
+    UnicodeText, Table
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.orm import relationship
@@ -47,6 +47,55 @@ class GenereEnum(enum.Enum):
     male = "M"
     female = "F"
 
+class EventTypeEnum(enum.Enum):
+    hackathon = "H"
+    lanparty = "LP"
+    livecoding = "LC"
+
+EventParticipantsAssociation = Table("event_participants_association", SQLAlchemyBase.metadata,
+                                      Column("event_id", Integer,
+                                             ForeignKey("events.id", onupdate="CASCADE", ondelete="CASCADE"),
+                                             nullable=False),
+                                      Column("user_id", Integer,
+                                             ForeignKey("users.id", onupdate="CASCADE", ondelete="CASCADE"),
+                                             nullable=False),
+                                      )
+
+class Event(SQLAlchemyBase, JSONModel):
+    __tablename__ = "events"
+
+    id = Column(Integer, primary_key=True)
+    created_at = Column(DateTime, default=datetime.datetime.now, nullable=False)
+    name = Column(Unicode(255), nullable=False)
+    description = Column(UnicodeText)
+    type = Column(Enum(EventTypeEnum))
+    start_date = Column(DateTime, nullable=False)
+    finish_date = Column(DateTime, nullable=False)
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    owner = relationship("User", back_populates="events_owner")
+    registered = relationship("User", secondary=EventParticipantsAssociation, back_populates="events_enrolled")
+
+    @hybrid_property
+    def logo_url(self):
+        return _generate_media_url(self, "logo", default_image=True)
+
+    @hybrid_property
+    def poster_url(self):
+        return _generate_media_url(self, "poster")
+
+    @hybrid_property
+    def json_model(self):
+        return {
+            "id": self.id,
+            "created_at": self.created_at.strftime(settings.DATETIME_DEFAULT_FORMAT),
+            "name": self.name,
+            "description": self.description,
+            "type": self.type.value,
+            "start_date": self.start_date.strftime(settings.DATETIME_DEFAULT_FORMAT),
+            "finish_date": self.finish_date.strftime(settings.DATETIME_DEFAULT_FORMAT),
+            "owner": self.owner.username,
+            "registered": [enrolled.username for enrolled in self.registered],
+        }
 
 class UserToken(SQLAlchemyBase):
     __tablename__ = "users_tokens"
@@ -72,6 +121,8 @@ class User(SQLAlchemyBase, JSONModel):
     genere = Column(Enum(GenereEnum), nullable=False)
     phone = Column(Unicode(50))
     photo = Column(Unicode(255))
+    events_owner = relationship("Event", back_populates="owner")
+    events_enrolled = relationship("Event", back_populates="registered")
 
     @hybrid_property
     def public_profile(self):

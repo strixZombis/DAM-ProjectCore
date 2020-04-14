@@ -34,6 +34,13 @@ DATETIME_DEFAULT_FORMAT = "{date} {time}".format(date=DATE_DEFAULT_FORMAT, time=
 # Misc settings
 MAX_USER_TOKENS = 5
 
+# Static files settings
+STATIC_HOSTNAME = "ph-web.gcdom"
+STATIC_DIRECTORY = os.path.join(os.path.abspath(__file__), "../../static", )
+STATIC_URL = "static/"
+MEDIA_PREFIX = "media/"
+DEFAULT_IMAGE_NAME = "default.png"
+
 # Logging settings
 LOGGING_CONFIG = {
     "version": 1,

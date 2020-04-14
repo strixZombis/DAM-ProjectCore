@@ -9,7 +9,7 @@ from sqlalchemy.sql import text
 
 import db
 import settings
-from db.models import SQLAlchemyBase, User, GenereEnum, UserToken
+from db.models import SQLAlchemyBase, User, GenereEnum, UserToken, Event, EventTypeEnum
 from settings import DEFAULT_LANGUAGE
 
 # LOGGING
@@ -81,5 +81,51 @@ if __name__ == "__main__":
     db_session.add(user_admin)
     db_session.add(user_1)
     db_session.add(user_2)
+
+
+
+    # -------------------- CREATE EVENTS --------------------
+
+    day_period = datetime.timedelta(days=1)
+
+    event_hackatoon = Event(
+        created_at=datetime.datetime.now(),
+        name="event1",
+        description="description 1",
+        type=EventTypeEnum.hackathon,
+        start_date=datetime.datetime.now() + day_period,
+        finish_date=datetime.datetime.now() + (day_period * 2),
+        owner_id = 0,
+        registered=[user_1, user_2]
+    )
+
+    event_livecoding = Event(
+        created_at=datetime.datetime.now(),
+        name="event2",
+        description="descr2",
+        type=EventTypeEnum.livecoding,
+        start_date=datetime.datetime.now() + day_period,
+        finish_date=datetime.datetime.now() + (day_period * 5),
+        owner_id=1,
+        registered=[user_2]
+    )
+
+    event_lanparty = Event(
+        created_at=datetime.datetime.now(),
+        name="event3",
+        description="desc3",
+        type=EventTypeEnum.lanparty,
+        start_date=datetime.datetime.now() + day_period,
+        finish_date=datetime.datetime.now() + (day_period * 1),
+        owner_id=1,
+        registered=[]
+    )
+
+    db_session.add(event_hackatoon)
+    db_session.add(event_livecoding)
+    db_session.add(event_lanparty)
+
+
+
     db_session.commit()
     db_session.close()

@@ -7,7 +7,7 @@ import falcon
 
 import messages
 import middlewares
-from resources import account_resources, common_resources, user_resources
+from resources import account_resources, common_resources, user_resources, event_resources
 from settings import configure_logging
 
 # LOGGING
@@ -37,4 +37,10 @@ application.add_route("/account/delete_token", account_resources.ResourceDeleteU
 
 application.add_route("/users/register", user_resources.ResourceRegisterUser())
 application.add_route("/users/show/{username}", user_resources.ResourceGetUserProfile())
+
+
+application.add_route("/events", event_resources.ResourceGetEvents())
+application.add_route("/events/show/{id:int}", event_resources.ResourceGetEvent())
+
+
 application.add_sink(handle_404, "")
