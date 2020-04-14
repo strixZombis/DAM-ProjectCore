@@ -69,19 +69,16 @@ class Event(SQLAlchemyBase, JSONModel):
     name = Column(Unicode(255), nullable=False)
     description = Column(UnicodeText)
     type = Column(Enum(EventTypeEnum))
+    poster = Column(Unicode(255))
     start_date = Column(DateTime, nullable=False)
     finish_date = Column(DateTime, nullable=False)
-    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False, onupdate="CASCADE",ondelete="CASCADE")
+    owner_id = Column(Integer, ForeignKey("users.id",onupdate="CASCADE",ondelete="CASCADE"), nullable=False)
     owner = relationship("User", back_populates="events_owner")
     registered = relationship("User", secondary=EventParticipantsAssociation, back_populates="events_enrolled")
 
     @hybrid_property
-    def logo_url(self):
-        return _generate_media_url(self, "logo", default_image=True)
-
-    @hybrid_property
     def poster_url(self):
-        return _generate_media_url(self, "poster")
+        return _generate_media_url(self, "poster", default_image=True)
 
     @hybrid_property
     def json_model(self):
@@ -90,6 +87,7 @@ class Event(SQLAlchemyBase, JSONModel):
             "created_at": self.created_at.strftime(settings.DATETIME_DEFAULT_FORMAT),
             "name": self.name,
             "description": self.description,
+            "poster_url": self.poster_url,
             "type": self.type.value,
             "start_date": self.start_date.strftime(settings.DATETIME_DEFAULT_FORMAT),
             "finish_date": self.finish_date.strftime(settings.DATETIME_DEFAULT_FORMAT),
@@ -121,7 +119,7 @@ class User(SQLAlchemyBase, JSONModel):
     genere = Column(Enum(GenereEnum), nullable=False)
     phone = Column(Unicode(50))
     photo = Column(Unicode(255))
-    events_owner = relationship("Event", back_populates="owner",cascade="all, delete-orphan")
+    events_owner = relationship("Event", back_populates="owner", cascade="all, delete-orphan")
     events_enrolled = relationship("Event", back_populates="registered")
 
     @hybrid_property

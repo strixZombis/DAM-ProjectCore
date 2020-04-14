@@ -96,6 +96,7 @@ if __name__ == "__main__":
         start_date=datetime.datetime.now() + day_period,
         finish_date=datetime.datetime.now() + (day_period * 2),
         owner_id = 0,
+        poster="logo.png",
         registered=[user_1, user_2]
     )
 
