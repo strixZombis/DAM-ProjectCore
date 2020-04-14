@@ -6,13 +6,14 @@ import datetime
 import enum
 import logging
 import os
+from _operator import and_
 from builtins import getattr
 from urllib.parse import urljoin
 
 import falcon
 from passlib.hash import pbkdf2_sha256
 from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Integer, Unicode, \
-    UnicodeText, Table
+    UnicodeText, Table, type_coerce, case
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.orm import relationship
@@ -52,6 +53,12 @@ class EventTypeEnum(enum.Enum):
     lanparty = "LP"
     livecoding = "LC"
 
+class EventStatusEnum(enum.Enum):
+    open = "O"
+    closed = "C"
+    ongoing = "G"
+    undefined = "U"
+
 EventParticipantsAssociation = Table("event_participants_association", SQLAlchemyBase.metadata,
                                       Column("event_id", Integer,
                                              ForeignKey("events.id", onupdate="CASCADE", ondelete="CASCADE"),
@@ -81,6 +88,34 @@ class Event(SQLAlchemyBase, JSONModel):
         return _generate_media_url(self, "poster", default_image=True)
 
     @hybrid_property
+    def status(self):
+        current_datetime = datetime.datetime.now()
+        if current_datetime < self.start_date:
+            return EventStatusEnum.open
+        elif (current_datetime >= self.start_date) and (current_datetime <= self.finish_date):
+            return EventStatusEnum.ongoing
+        elif current_datetime > self.finish_date:
+            return EventStatusEnum.closed
+        else:
+            return EventStatusEnum.undefined
+
+    @status.expression
+    def status(cls):
+        current_datetime = datetime.datetime.now()
+        return case(
+            [
+                (current_datetime < cls.start_date,
+                 type_coerce(EventStatusEnum.open, Enum(EventStatusEnum))),
+                (and_(current_datetime > cls.start_date, current_datetime < cls.finish_date),
+                 type_coerce(EventStatusEnum.ongoing, Enum(EventStatusEnum))),
+                (current_datetime > cls.finish_date,
+                 type_coerce(EventStatusEnum.closed, Enum(EventStatusEnum))),
+            ],
+            else_=type_coerce(EventStatusEnum.undefined, Enum(EventStatusEnum))
+        )
+
+
+    @hybrid_property
     def json_model(self):
         return {
             "id": self.id,
@@ -93,6 +128,7 @@ class Event(SQLAlchemyBase, JSONModel):
             "finish_date": self.finish_date.strftime(settings.DATETIME_DEFAULT_FORMAT),
             "owner": self.owner.username,
             "registered": [enrolled.username for enrolled in self.registered],
+            "status": self.status.value
         }
 
 class UserToken(SQLAlchemyBase):

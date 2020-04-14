@@ -93,8 +93,8 @@ if __name__ == "__main__":
         name="event1",
         description="description 1",
         type=EventTypeEnum.hackathon,
-        start_date=datetime.datetime.now() + day_period,
-        finish_date=datetime.datetime.now() + (day_period * 2),
+        start_date=datetime.datetime.now() + (day_period * 3),
+        finish_date=datetime.datetime.now() + (day_period * 5),
         owner_id = 0,
         poster="logo.png",
         registered=[user_1, user_2]
@@ -105,8 +105,8 @@ if __name__ == "__main__":
         name="event2",
         description="descr2",
         type=EventTypeEnum.livecoding,
-        start_date=datetime.datetime.now() + day_period,
-        finish_date=datetime.datetime.now() + (day_period * 5),
+        start_date=datetime.datetime.now() - (day_period * 5),
+        finish_date=datetime.datetime.now() - (day_period * 4),
         owner_id=1,
         registered=[user_2]
     )
@@ -116,7 +116,7 @@ if __name__ == "__main__":
         name="event3",
         description="desc3",
         type=EventTypeEnum.lanparty,
-        start_date=datetime.datetime.now() + day_period,
+        start_date=datetime.datetime.now(),
         finish_date=datetime.datetime.now() + (day_period * 1),
         owner_id=1,
         registered=[]
