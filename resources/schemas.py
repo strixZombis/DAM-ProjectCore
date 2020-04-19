@@ -18,7 +18,16 @@ SchemaRegisterUser = {
         "name": {"type": "string"},
         "surname": {"type": "string"},
         "genere": {"type": "string"},
-        "rol":{"type": "string"}
+        "rol": {"type": "string"},
+        "position": {"type": "string"},
+        "phone": {"type": "string"},
+        "photo":{"type": "string"},
+        "matchname":{"type": "string"},
+        "timeplay":{"type": "string"},
+        "prefsmash":{"type": "string"},
+        "club":{"type": "string"},
+        "license":{"type": "string"}
+
     },
     "required": ["username", "password", "email","genere","rol"]
 }

@@ -9,7 +9,7 @@ from sqlalchemy.sql import text
 
 import db
 import settings
-from db.models import SQLAlchemyBase, User, GenereEnum, UserToken,RolEnum
+from db.models import SQLAlchemyBase, User, GenereEnum, UserToken, RolEnum, PositionEnum
 from settings import DEFAULT_LANGUAGE
 
 # LOGGING
@@ -48,8 +48,13 @@ if __name__ == "__main__":
         email="admin@damcore.com",
         name="Administrator",
         surname="DamCore",
+        phone="63812910",
         rol=RolEnum.player,
         genere=GenereEnum.male,
+        position=PositionEnum.left,
+        matchname="Jordi",
+        prefsmash="derechazo",
+        club="ManresaTenis"
     )
     user_admin.set_password("DAMCoure")
 
@@ -60,9 +65,15 @@ if __name__ == "__main__":
         email="usuari1@gmail.com",
         name="usuari",
         surname="1",
+        phone="63812910",
         rol=RolEnum.player,
         birthdate=datetime.datetime(1989, 1, 1),
-        genere=GenereEnum.male
+        genere=GenereEnum.male,
+        position = PositionEnum.left,
+        matchname = "Jordi",
+        prefsmash = "derechazo",
+        club = "ManresaTenis"
+
     )
     user_1.set_password("a1s2d3f4")
     user_1.tokens.append(UserToken(token="656e50e154865a5dc469b80437ed2f963b8f58c8857b66c9bf"))
@@ -74,9 +85,14 @@ if __name__ == "__main__":
         email="user2@gmail.com",
         name="user",
         surname="2",
+        phone="63812910",
         rol=RolEnum.player,
         birthdate=datetime.datetime(2017, 1, 1),
         genere=GenereEnum.male,
+        position=PositionEnum.left,
+        matchname="Jordi",
+        prefsmash="derechazo",
+        club="ManresaTenis"
     )
     user_2.set_password("r45tgt")
     user_2.tokens.append(UserToken(token="0a821f8ce58965eadc5ef884cf6f7ad99e0e7f58f429f584b2"))

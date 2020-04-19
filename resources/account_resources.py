@@ -6,9 +6,10 @@ import logging
 
 import falcon
 from falcon.media.validators import jsonschema
+from sqlalchemy.exc import IntegrityError
 
 import messages
-from db.models import User, UserToken
+from db.models import User, UserToken, GenereEnum, RolEnum, PositionEnum, LicenseEnum
 from hooks import requires_auth
 from resources.base_resources import DAMCoreResource
 from resources.schemas import SchemaUserToken
@@ -81,4 +82,61 @@ class ResourceAccountUserProfile(DAMCoreResource):
         current_user = req.context["auth_user"]
 
         resp.media = current_user.json_model
+        resp.status = falcon.HTTP_200
+
+@falcon.before(requires_auth)
+class ResourceAccountUpdateUserProfile(DAMCoreResource):
+    def on_put(self, req, resp, *args, **kwargs):
+        super(ResourceAccountUpdateUserProfile, self).on_post(req, resp, *args, **kwargs)
+
+        aux_user = User()
+
+        try:
+            try:
+                aux_genere = GenereEnum(req.media["genere"].upper())
+            except ValueError:
+                raise falcon.HTTPBadRequest(description=messages.genere_invalid)
+            try:
+                aux_rol = RolEnum(req.media["rol"].upper())
+            except ValueError:
+                raise falcon.HTTPBadRequest(description=messages.rol_invalid)
+
+            try:
+                aux_position = PositionEnum(req.media["position"].upper())
+
+            except ValueError:
+                raise falcon.HTTPBadRequest(description=messages.position_invalid)
+
+            try:
+                aux_license = LicenseEnum(req.media["license"].upper())
+
+            except ValueError:
+                raise falcon.HTTPBadRequest(description=messages.rol_invalid)
+
+            aux_user.username = req.media["username"]
+            aux_user.password = req.media["password"]
+            aux_user.email = req.media["email"]
+            aux_user.genere = aux_genere
+            aux_user.phone = req.media["phone"]
+            aux_user.birthdate = req.media["birthdate"]
+            aux_user.rol = aux_rol
+            aux_user.position = aux_position
+            aux_user.matchname = req.media["matchname"]
+            aux_user.prefsmash = req.media["prefsmash"]
+            aux_user.club = req.media["club"]
+            aux_user.timeplay = req.media["timeplay"]
+            aux_user.license = aux_license
+
+
+
+            self.db_session.add(aux_user)
+
+            try:
+                self.db_session.commit()
+            except IntegrityError:
+                raise falcon.HTTPBadRequest(description=messages.user_exists)
+
+        except KeyError:
+            raise falcon.HTTPBadRequest(description=messages.parameters_invalid)
+
         resp.status = falcon.HTTP_200

@@ -52,6 +52,15 @@ class GenereEnum(enum.Enum):
     male = "M"
     female = "F"
 
+class PositionEnum(enum.Enum):
+    left = "L"
+    rigth = "R"
+
+
+class LicenseEnum(enum.Enum):
+    have = "1"
+    dont = "0"
+
 
 class UserToken(SQLAlchemyBase):
     __tablename__ = "users_tokens"
@@ -76,16 +85,30 @@ class User(SQLAlchemyBase, JSONModel):
     birthdate = Column(Date)
     genere = Column(Enum(GenereEnum), nullable=False)
     rol = Column(Enum(RolEnum), nullable=False)
+    position = Column(Enum(PositionEnum))
     phone = Column(Unicode(50))
     photo = Column(Unicode(255))
+    license = Column(Enum(LicenseEnum))
+    matchname = Column(Unicode(50))
+    prefsmash = Column(Unicode(50))
+    club = Column(Unicode(50))
+    timeplay= Column(Unicode(50))
 
     @hybrid_property
     def public_profile(self):
         return {
             "created_at": self.created_at.strftime(settings.DATETIME_DEFAULT_FORMAT),
             "username": self.username,
+            "name": self.name,
+            "email": self.email,
             "genere": self.genere.value,
             "photo": self.photo,
+            "rol": self.rol,
+            "position": self.position,
+            "matchname": self.matchname,
+            "timeplay": self.timeplay,
+            "prefsmash":self.prefsmash,
+            "club": self.club
         }
 
     @hybrid_method
@@ -111,12 +134,21 @@ class User(SQLAlchemyBase, JSONModel):
             "created_at": self.created_at.strftime(settings.DATETIME_DEFAULT_FORMAT),
             "username": self.username,
             "email": self.email,
+            "password": self.password,
             "name": self.name,
             "surname": self.surname,
             "birthdate": self.birthdate.strftime(
                 settings.DATE_DEFAULT_FORMAT) if self.birthdate is not None else self.birthdate,
             "genere": self.genere.value,
             "rol": self.rol.value,
+            "position":self.position.value,
             "phone": self.phone,
             "photo": self.photo,
+            "matchname": self.matchname,
+            "timeplay": self.timeplay,
+            "prefsmash": self.prefsmash,
+            "club": self.club,
+            "license": self.license
+
+
         }

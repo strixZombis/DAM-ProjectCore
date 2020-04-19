@@ -32,6 +32,20 @@ class ResourceGetUserProfile(DAMCoreResource):
                 raise falcon.HTTPBadRequest(description=messages.user_not_found)
 
 
+@falcon.before(requires_auth)
+class ResourceGetUsers(DAMCoreResource):
+    def on_get(self, req, resp, *args, **kwargs):
+        super(ResourceGetUsers, self).on_get(req, resp, *args, **kwargs)
+        response_users = list()
+        aux_users = self.db_session.query(User)
+
+        if aux_users is not None:
+            for current_user in aux_users.all():
+                response_users.append(current_user.json_model)
+        resp.media = response_users
+        resp.status = falcon.HTTP_200
+
+
 class ResourceRegisterUser(DAMCoreResource):
     @jsonschema.validate(SchemaRegisterUser)
     def on_post(self, req, resp, *args, **kwargs):
@@ -46,6 +60,7 @@ class ResourceRegisterUser(DAMCoreResource):
                 raise falcon.HTTPBadRequest(description=messages.genere_invalid)
             try:
                 aux_rol = RolEnum(req.media["rol"].upper())
+
             except ValueError:
                 raise falcon.HTTPBadRequest(description=messages.rol_invalid)
 
