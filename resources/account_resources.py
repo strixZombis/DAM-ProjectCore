@@ -2,16 +2,20 @@
 # -*- coding: utf-8 -*-
 
 import base64
+import datetime
 import logging
+import os
 
 import falcon
 from falcon.media.validators import jsonschema
 
 import messages
+import settings
 from db.models import User, UserToken
 from hooks import requires_auth
 from resources.base_resources import DAMCoreResource
 from resources.schemas import SchemaUserToken
+from settings import STATIC_DIRECTORY
 
 mylogger = logging.getLogger(__name__)
 
@@ -82,3 +86,40 @@ class ResourceAccountUserProfile(DAMCoreResource):
 
         resp.media = current_user.json_model
         resp.status = falcon.HTTP_200
+
+@falcon.before(requires_auth)
+class ResourceAccountUpdateProfileImage(DAMCoreResource):
+    def on_post(self, req, resp, *args, **kwargs):
+        super(ResourceAccountUpdateProfileImage, self).on_post(req, resp, *args, **kwargs)
+
+        # Get the user from the token
+        current_user = req.context["auth_user"]
+
+        # Get the file from form
+        incoming_file = req.get_param("image_file")
+
+        imgId = str(int(datetime.datetime.now().timestamp() * 1000))
+
+        # build filename
+        filename = imgId + "." + incoming_file.filename.split(".")[-1]
+
+        # check folder
+        resource_path = current_user.photo_path
+        if not os.path.exists(resource_path):
+            os.makedirs(resource_path)
+
+        # create a file path
+        file_path = resource_path + filename
+
+        # write to a temporary file to prevent incomplete files from being used
+        temp_file_path = file_path + "~"
+        with open(temp_file_path, "wb") as f:
+            f.write(incoming_file.file.read())
+
+        # file has been fully saved to disk move it into place
+        os.rename(temp_file_path, file_path)
+
+        # Update db model
+        current_user.photo = filename
+        self.db_session.add(current_user)
+        self.db_session.commit()

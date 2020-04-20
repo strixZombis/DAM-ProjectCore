@@ -44,14 +44,22 @@ def _generate_media_url(class_instance, class_attibute_name, default_image=False
             return class_attribute
 
 
+def _generate_media_path(class_instance, class_attibute_name):
+    class_path = "/{0}{1}{2}/{3}/{4}/".format(settings.STATIC_URL, settings.MEDIA_PREFIX, class_instance.__tablename__,
+                                              str(class_instance.id), class_attibute_name)
+    return class_path
+
+
 class GenereEnum(enum.Enum):
     male = "M"
     female = "F"
+
 
 class EventTypeEnum(enum.Enum):
     hackathon = "H"
     lanparty = "LP"
     livecoding = "LC"
+
 
 class EventStatusEnum(enum.Enum):
     open = "O"
@@ -59,14 +67,16 @@ class EventStatusEnum(enum.Enum):
     ongoing = "G"
     undefined = "U"
 
+
 EventParticipantsAssociation = Table("event_participants_association", SQLAlchemyBase.metadata,
-                                      Column("event_id", Integer,
-                                             ForeignKey("events.id", onupdate="CASCADE", ondelete="CASCADE"),
-                                             nullable=False),
-                                      Column("user_id", Integer,
-                                             ForeignKey("users.id", onupdate="CASCADE", ondelete="CASCADE"),
-                                             nullable=False),
-                                      )
+                                     Column("event_id", Integer,
+                                            ForeignKey("events.id", onupdate="CASCADE", ondelete="CASCADE"),
+                                            nullable=False),
+                                     Column("user_id", Integer,
+                                            ForeignKey("users.id", onupdate="CASCADE", ondelete="CASCADE"),
+                                            nullable=False),
+                                     )
+
 
 class Event(SQLAlchemyBase, JSONModel):
     __tablename__ = "events"
@@ -79,13 +89,17 @@ class Event(SQLAlchemyBase, JSONModel):
     poster = Column(Unicode(255))
     start_date = Column(DateTime, nullable=False)
     finish_date = Column(DateTime, nullable=False)
-    owner_id = Column(Integer, ForeignKey("users.id",onupdate="CASCADE",ondelete="CASCADE"), nullable=False)
+    owner_id = Column(Integer, ForeignKey("users.id", onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
     owner = relationship("User", back_populates="events_owner")
     registered = relationship("User", secondary=EventParticipantsAssociation, back_populates="events_enrolled")
 
     @hybrid_property
     def poster_url(self):
         return _generate_media_url(self, "poster", default_image=True)
+
+    @hybrid_property
+    def poster_path(self):
+        return _generate_media_path(self, "poster")
 
     @hybrid_property
     def status(self):
@@ -114,7 +128,6 @@ class Event(SQLAlchemyBase, JSONModel):
             else_=type_coerce(EventStatusEnum.undefined, Enum(EventStatusEnum))
         )
 
-
     @hybrid_property
     def json_model(self):
         return {
@@ -130,6 +143,7 @@ class Event(SQLAlchemyBase, JSONModel):
             "registered": [enrolled.username for enrolled in self.registered],
             "status": self.status.value
         }
+
 
 class UserToken(SQLAlchemyBase):
     __tablename__ = "users_tokens"
@@ -167,6 +181,14 @@ class User(SQLAlchemyBase, JSONModel):
             "photo": self.photo,
         }
 
+    @hybrid_property
+    def photo_url(self):
+        return _generate_media_url(self, "photo")
+
+    @hybrid_property
+    def photo_path(self):
+        return _generate_media_path(self, "photo")
+
     @hybrid_method
     def set_password(self, password_string):
         self.password = pbkdf2_sha256.hash(password_string)
@@ -196,5 +218,5 @@ class User(SQLAlchemyBase, JSONModel):
                 settings.DATE_DEFAULT_FORMAT) if self.birthdate is not None else self.birthdate,
             "genere": self.genere.value,
             "phone": self.phone,
-            "photo": self.photo,
+            "photo": self.photo_url
         }
