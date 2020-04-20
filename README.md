@@ -1,6 +1,17 @@
 # DAM-ProjectCore
 
+## About
+
+<img align="left" width="100" height="100" src="https://user-images.githubusercontent.com/61190134/76793662-b6b8bd00-67c5-11ea-83b2-efcc9ed462fc.png">
+
+*Instructor*: [Jordi Mateo Fornés](http:jordimateofornes.com)
+
+*Course*: [Grau en Tècniques d'Interacció Digital i de Computació](http://www.grauinteraccioicomputacio.udl.cat/ca/index.html)
+
+*University*: University of Lleida - Campus Igualada - Escola Politècnica Superior
+
 ## Description
+
 This project create 3 services using docker and docker-compose.
 
 - **Container 1**: MySQL Server. 
