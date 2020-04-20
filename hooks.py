@@ -23,3 +23,7 @@ def requires_auth(req, resp, resource, params):
             raise falcon.HTTPUnauthorized(description=messages.token_invalid)
     else:
         raise falcon.HTTPUnauthorized(description=messages.token_required)
+
+
+
+
