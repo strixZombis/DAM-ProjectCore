@@ -9,6 +9,8 @@ import messages
 import middlewares
 from resources import account_resources, common_resources, user_resources
 from settings import configure_logging
+from falcon_multipart.middleware import MultipartMiddleware
+
 
 # LOGGING
 mylogger = logging.getLogger(__name__)
@@ -26,7 +28,8 @@ def handle_404(req, resp):
 app = application = falcon.API(
     middleware=[
         middlewares.DBSessionManager(),
-        middlewares.Falconi18n()
+        middlewares.Falconi18n(),
+        MultipartMiddleware()
     ]
 )
 application.add_route("/", common_resources.ResourceHome())
@@ -36,7 +39,8 @@ application.add_route("/account/create_token", account_resources.ResourceCreateU
 application.add_route("/account/delete_token", account_resources.ResourceDeleteUserToken())
 #editar perfil
 application.add_route("/account/update_profile", account_resources.ResourceAccountUpdateUserProfile())
-
+#Canviar la foto del perfil
+application.add_route("/account/profile/update_profile_image", account_resources.ResourceAccountUpdateProfileImage())
 application.add_route("/users/register", user_resources.ResourceRegisterUser())
 #Entrar en un perfil publico
 application.add_route("/users/show/{username}", user_resources.ResourceGetUserProfile())

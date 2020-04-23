@@ -9,6 +9,7 @@ services:
       - DAMCore_DB_HOST=mysql_db_container
     volumes:
       - ../../DAM-ProjectCore/.:/app
+      - ../../static/.:/static
     tty: true
     links:
       - adminer_container

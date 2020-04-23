@@ -28,20 +28,11 @@ SQLAlchemyBase = declarative_base()
 make_translatable(options={"locales": settings.get_accepted_languages()})
 
 
-def _generate_media_url(class_instance, class_attibute_name, default_image=False):
-    class_base_url = urljoin(urljoin(urljoin("http://{}".format(settings.STATIC_HOSTNAME), settings.STATIC_URL),
-                                     settings.MEDIA_PREFIX),
-                             class_instance.__tablename__ + "/")
-    class_attribute = getattr(class_instance, class_attibute_name)
-    if class_attribute is not None:
-        return urljoin(urljoin(urljoin(urljoin(class_base_url, class_attribute), str(class_instance.id) + "/"),
-                               class_attibute_name + "/"), class_attribute)
-    else:
-        if default_image:
-            return urljoin(urljoin(class_base_url, class_attibute_name + "/"), settings.DEFAULT_IMAGE_NAME)
-        else:
-            return class_attribute
 
+def _generate_media_path(class_instance, class_attibute_name):
+    class_path = "/{0}{1}{2}/{3}/{4}/".format(settings.STATIC_URL, settings.MEDIA_PREFIX, class_instance.__tablename__,
+                                              str(class_instance.id), class_attibute_name)
+    return class_path
 
 class RolEnum(enum.Enum):
     owner = "O"
@@ -58,12 +49,16 @@ class PositionEnum(enum.Enum):
 
 
 class LicenseEnum(enum.Enum):
-    have = "1"
-    dont = "0"
+    have = "Y"
+    dont = "N"
+
 
 
 class UserToken(SQLAlchemyBase):
     __tablename__ = "users_tokens"
+
+
+
 
     id = Column(Integer, primary_key=True)
     token = Column(Unicode(50), nullable=False, unique=True)
@@ -86,8 +81,8 @@ class User(SQLAlchemyBase, JSONModel):
     genere = Column(Enum(GenereEnum), nullable=False)
     rol = Column(Enum(RolEnum), nullable=False)
     position = Column(Enum(PositionEnum))
-    phone = Column(Unicode(50))
-    photo = Column(Unicode(255))
+    phone= Column(Unicode(50))
+    photo_path = Column(Unicode(255))
     license = Column(Enum(LicenseEnum))
     matchname = Column(Unicode(50))
     prefsmash = Column(Unicode(50))
@@ -102,7 +97,7 @@ class User(SQLAlchemyBase, JSONModel):
             "name": self.name,
             "email": self.email,
             "genere": self.genere.value,
-            "photo": self.photo,
+            "photo": self.photo_path,
             "rol": self.rol,
             "position": self.position,
             "matchname": self.matchname,
@@ -110,6 +105,11 @@ class User(SQLAlchemyBase, JSONModel):
             "prefsmash":self.prefsmash,
             "club": self.club
         }
+
+    @hybrid_property
+    def poster_path(self):
+        return _generate_media_path(self, "poster")
+
 
     @hybrid_method
     def set_password(self, password_string):
@@ -143,7 +143,7 @@ class User(SQLAlchemyBase, JSONModel):
             "rol": self.rol.value,
             "position":self.position.value,
             "phone": self.phone,
-            "photo": self.photo,
+            "photo": self.photo_path,
             "matchname": self.matchname,
             "timeplay": self.timeplay,
             "prefsmash": self.prefsmash,

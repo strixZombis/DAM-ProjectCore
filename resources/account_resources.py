@@ -3,19 +3,45 @@
 
 import base64
 import logging
-
+import datetime
 import falcon
+import os
+
 from falcon.media.validators import jsonschema
 from sqlalchemy.exc import IntegrityError
-
+from resources import utils
+import settings
 import messages
 from db.models import User, UserToken, GenereEnum, RolEnum, PositionEnum, LicenseEnum
 from hooks import requires_auth
 from resources.base_resources import DAMCoreResource
-from resources.schemas import SchemaUserToken
+from resources.schemas import SchemaUserToken, SchemaUpdateUser
+from settings import STATIC_DIRECTORY
 
 mylogger = logging.getLogger(__name__)
 
+@falcon.before(requires_auth)
+class ResourceAccountUpdateProfileImage(DAMCoreResource):
+    def on_post(self, req, resp, *args, **kwargs):
+        super(ResourceAccountUpdateProfileImage, self).on_post(req, resp, *args, **kwargs)
+
+
+        # Get the user from the token
+        current_user = req.context["auth_user"]
+        resource_path = current_user.photo_path
+
+        # Get the file from form
+        incoming_file = req.get_param("image_file")
+
+        # Run the common part for storing
+        filename = utils.save_static_media_file(incoming_file, resource_path)
+
+        # Update db model
+        current_user.photo = filename
+        self.db_session.add(current_user)
+        self.db_session.commit()
+
+        resp.status = falcon.HTTP_200
 
 class ResourceCreateUserToken(DAMCoreResource):
     def on_post(self, req, resp, *args, **kwargs):
@@ -86,57 +112,37 @@ class ResourceAccountUserProfile(DAMCoreResource):
 
 @falcon.before(requires_auth)
 class ResourceAccountUpdateUserProfile(DAMCoreResource):
+    @jsonschema.validate(SchemaUpdateUser)
     def on_put(self, req, resp, *args, **kwargs):
-        super(ResourceAccountUpdateUserProfile, self).on_post(req, resp, *args, **kwargs)
+        super(ResourceAccountUpdateUserProfile, self).on_put(req, resp, *args, **kwargs)
 
-        aux_user = User()
+        current_user = req.context["auth_user"]
 
-        try:
-            try:
-                aux_genere = GenereEnum(req.media["genere"].upper())
-            except ValueError:
-                raise falcon.HTTPBadRequest(description=messages.genere_invalid)
-            try:
-                aux_rol = RolEnum(req.media["rol"].upper())
-            except ValueError:
-                raise falcon.HTTPBadRequest(description=messages.rol_invalid)
-
-            try:
-                aux_position = PositionEnum(req.media["position"].upper())
-
-            except ValueError:
-                raise falcon.HTTPBadRequest(description=messages.position_invalid)
-
-            try:
-                aux_license = LicenseEnum(req.media["license"].upper())
-
-            except ValueError:
-                raise falcon.HTTPBadRequest(description=messages.rol_invalid)
-
-            aux_user.username = req.media["username"]
-            aux_user.password = req.media["password"]
-            aux_user.email = req.media["email"]
-            aux_user.genere = aux_genere
-            aux_user.phone = req.media["phone"]
-            aux_user.birthdate = req.media["birthdate"]
-            aux_user.rol = aux_rol
-            aux_user.position = aux_position
-            aux_user.matchname = req.media["matchname"]
-            aux_user.prefsmash = req.media["prefsmash"]
-            aux_user.club = req.media["club"]
-            aux_user.timeplay = req.media["timeplay"]
-            aux_user.license = aux_license
-
-
-
-            self.db_session.add(aux_user)
+        for key in req.media:
+            value = req.media[key]
+            if key == "genere":
+                try:
+                    value = GenereEnum(value.upper())
+                except ValueError:
+                    raise falcon.HTTPBadRequest(description=messages.genere_invalid)
+            if key == "rol":
+                try:
+                    value = RolEnum(value.upper())
+                except ValueError:
+                    raise falcon.HTTPBadRequest(description=messages.rol_invalid)
+            if key == "position":
+                try:
+                    value = PositionEnum(value.upper())
+                except ValueError:
+                    raise falcon.HTTPBadRequest(description=messages.position_invalid)
 
             try:
-                self.db_session.commit()
-            except IntegrityError:
-                raise falcon.HTTPBadRequest(description=messages.user_exists)
+                getattr(current_user,key)
+                if (key != "username"):
+                    setattr(current_user, key, value)
+            except AttributeError:
+                raise falcon.HTTPBadRequest(description=messages.parameters_invalid)
 
-        except KeyError:
-            raise falcon.HTTPBadRequest(description=messages.parameters_invalid)
 
+        self.db_session.commit()
         resp.status = falcon.HTTP_200
