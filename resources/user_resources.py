@@ -21,15 +21,27 @@ mylogger = logging.getLogger(__name__)
 class ResourceGetUserProfile(DAMCoreResource):
     def on_get(self, req, resp, *args, **kwargs):
         super(ResourceGetUserProfile, self).on_get(req, resp, *args, **kwargs)
+        users_rol = req.get_param("rol")
+        if users_rol == "P":
+            if "username" in kwargs:
+                try:
+                    aux_user = self.db_session.query(User).filter(User.username == kwargs["username"]).one()
 
-        if "username" in kwargs:
-            try:
-                aux_user = self.db_session.query(User).filter(User.username == kwargs["username"]).one()
+                    resp.media = aux_user.public_profile
+                    resp.status = falcon.HTTP_200
+                except NoResultFound:
+                    raise falcon.HTTPBadRequest(description=messages.user_not_found)
+            if "prefsmash" == "derechazo":
+                try:
+                    aux_user = self.db_session.query(User).filter(User.username == kwargs["username"]).one()
 
-                resp.media = aux_user.public_profile
-                resp.status = falcon.HTTP_200
-            except NoResultFound:
-                raise falcon.HTTPBadRequest(description=messages.user_not_found)
+                    resp.media = aux_user.public_profile
+                    resp.status = falcon.HTTP_200
+                except NoResultFound:
+                    raise falcon.HTTPBadRequest(description=messages.prefsmash_not_found)
+
+
+
 
 
 @falcon.before(requires_auth)
