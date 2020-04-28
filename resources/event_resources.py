@@ -2,7 +2,7 @@ import falcon
 from sqlalchemy.orm.exc import NoResultFound
 
 import messages
-from db.models import Event, EventStatusEnum
+from db.models import Event, EventStatusEnum, EventTypeEnum
 from resources.base_resources import DAMCoreResource
 
 
@@ -17,6 +17,13 @@ class ResourceGetEvents(DAMCoreResource):
                     request_event_status not in [i.value for i in EventStatusEnum.__members__.values()]):
                 raise falcon.HTTPInvalidParam(messages.event_status_invalid, "status")
 
+        request_event_type = req.get_param("type", False)
+        if request_event_type is not None:
+            request_event_type = request_event_type.upper()
+            if (len(request_event_type) != 1) or (
+                    request_event_type not in [i.value for i in EventTypeEnum.__members__.values()]):
+                raise falcon.HTTPInvalidParam(messages.event_status_invalid, "type")
+
         response_events = list()
 
         aux_events = self.db_session.query(Event)
@@ -25,6 +32,13 @@ class ResourceGetEvents(DAMCoreResource):
             aux_events = \
                 aux_events.filter(
                     Event.status == EventStatusEnum(request_event_status))
+
+        if request_event_type is not None:
+            aux_events = \
+                aux_events.filter(
+                    Event.type == EventTypeEnum(request_event_type))
+
+        # La funcionalitat de filtrar events ha de continuar aqui:
 
         if aux_events is not None:
             for current_event in aux_events.all():
@@ -41,7 +55,6 @@ class ResourceGetEvent(DAMCoreResource):
         if "id" in kwargs:
             try:
                 response_event = self.db_session.query(Event).filter(Event.id == kwargs["id"]).one()
-
                 resp.media = response_event.json_model
                 resp.status = falcon.HTTP_200
             except NoResultFound:
@@ -52,18 +65,31 @@ class ResourceGetEvent(DAMCoreResource):
 
 class ResourceGetEventByType(DAMCoreResource):
     def on_get(self, req, resp, *args, **kwargs):
-        super(ResourceGetEvent, self).on_get(req, resp, *args, **kwargs)
+        super(ResourceGetEventByType, self).on_get(req, resp, *args, **kwargs)
 
-        if "type" in kwargs:
-            try:
-                data = []
-                response_events = self.db_session.query(Event).filter(Event.type.value == kwargs["type"]).all()
-                for re in response_events:
-                    data.append(re.json_model)
+        # Type és un parametre opcional, un query parameter d'HTTP per tant s'agafa així
+        request_event_type = req.get_param("type", False)
+        if request_event_type is not None:
+            request_event_type = request_event_type.upper()
+            if (len(request_event_type) != 1) or (
+                    request_event_type not in [i.value for i in EventTypeEnum.__members__.values()]):
+                raise falcon.HTTPInvalidParam(messages.event_status_invalid, "type")
 
-                resp.media = data
-                resp.status = falcon.HTTP_200
-            except NoResultFound:
-                raise falcon.HTTPBadRequest(description=messages.event_doesnt_exist)
-        else:
-            raise falcon.HTTPMissingParam("type")
+        response_events = list()
+
+        aux_events = self.db_session.query(Event)
+
+        if request_event_type is not None:
+            aux_events = \
+                aux_events.filter(
+                    Event.type == EventTypeEnum(request_event_type))
+
+        # Si no hi ha filtre es tornen tots els events i si s'aplica el filtre ara aixo ho podem juntar amb el
+        # filtre del status veure ResourceGetEvents
+        if aux_events is not None:
+            for current_event in aux_events.all():
+                response_events.append(current_event.json_model)
+
+        resp.media = response_events
+        resp.status = falcon.HTTP_200
+
