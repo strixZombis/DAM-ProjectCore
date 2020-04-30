@@ -48,3 +48,16 @@ class ResourceGetEvent(DAMCoreResource):
                 raise falcon.HTTPBadRequest(description=messages.event_doesnt_exist)
         else:
             raise falcon.HTTPMissingParam("id")
+
+
+class ResourceGetName(DAMCoreResource):
+    def on_get(self, req, resp, *args, **kwargs):
+        super(ResourceGetName, self).on_get(req, resp, *args, **kwargs)
+        if "name" in kwargs:
+            try:
+                response_event = self.db_session.query(Event).filter(Event.name == kwargs["name"]).one()
+
+                resp.media = response_event.json_model
+                resp.status = falcon.HTTP_200
+            except NoResultFound:
+                raise falcon.HTTPBadRequest(description=messages.event_doesnt_exist)
